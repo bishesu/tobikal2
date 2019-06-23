@@ -10,6 +10,7 @@ app.use(cors());
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.post("/register", (req, res) => {
+    console.log(req.body)
     var myData = new User(req.body);
     myData.save().then(function() {
         res.send('User registered successfully');

@@ -20,6 +20,9 @@ const User = mongoose.model('user', {
     },
     password: {
         type: String
+    },
+    usertype: {
+        type: String
     }
 
 
