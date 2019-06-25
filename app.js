@@ -32,19 +32,28 @@ app.post("/login", async function(req, res) {
         // console.log(user);
     res.send({
         token: token,
-        usertype: user.usertype
+        usertype: user.usertype,
+        id: user._id
     })
 })
 
 //for profile
-app.post("/profile", function(req, res) {
-    var user = new user({
-        username: req.body.username,
-        firstname: req.body.firstname,
-        lastname: req.body.lastname,
-        contact: req.body.contact,
-        email: req.body.email
-    });
+app.get("/profile/:userId", function(req, res) {
+    User.findById(req.params.userId).then(function(loggedInUser) {
+        res.json(loggedInUser);
+    })
+})
+
+//for updating user profile
+app.put("/updateprofile/:userId", function(req, res) {
+    console.log(req.body)
+    const userId = req.params.userId;
+    const { username, firstname, lastname, contact, description } = req.body;
+    User.findOneAndUpdate({ _id: userId }, { username, firstname, lastname, contact, description }, { new: true }).then(function(updateduser) {
+        res.send("user updated successfully");
+    }).catch(function(e) {
+        res.send(e)
+    })
 })
 
 
