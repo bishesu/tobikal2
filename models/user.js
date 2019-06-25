@@ -23,7 +23,8 @@ const userSchema = new mongoose.Schema({
         type: String
     },
     usertype: {
-        type: String
+        type: String,
+        default: "user"
     },
     tokens: [{
         token: {
@@ -51,5 +52,7 @@ userSchema.statics.checkCrediantialsDb = async(usern, pswd) => {
     const user1 = await User.findOne({ username: usern, password: pswd })
     return user1;
 }
+
+
 const User = mongoose.model('User', userSchema);
 module.exports = User;
