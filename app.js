@@ -10,6 +10,8 @@ const path = require('path');
 const auth = require('./middleware/auth');
 app.use(express.static('./images'))
 const ImgPost = require('./models/imgpost');
+const mongoose = require('mongoose');
+const comment = mongoose.model("comment");
 
 app.use(cors());
 
@@ -115,6 +117,89 @@ app.get('/user/auth', auth, function(req, res) {
     console.log(req.user);
     res.send(req.user);
 })
+
+//deleting user post
+app.delete('/createpost/:userpostdelete', async(req, res) => {
+    try {
+        const post = await post.findByIdAndRemove({
+            _id: req.params.userpostdelete
+        });
+        res.send(post)
+    } catch (error) {
+        res.send(500)
+    }
+})
+
+// create a comment
+app.post(".imgpost/:id/comment", async(req, res) => { //imgpost/:id/comment pls chck
+    //find a post    
+    const imgpost = await imgpost.findone({ _id: req.params.id });
+    //create a comment
+    const comment = new comment();
+    comment.content = req.body.content;
+    comment.imgpost = imgpost._id;
+    await comment.save();
+    //associate post with comment
+    imgpost.comment.push(comment._id);
+    await imgpost.save();
+    res.send(comment);
+});
+
+//read a comment
+
+
+
+//feedback
+var express = require('express');
+var router = express.Router();
+var Contact = require('../Model/contact');
+var Feedback = require('../Model/feedback');
+
+
+router.post('/contact', (req, res) => {
+    // res.header("allow-file-access-from-files", "*");
+    var contact = new Contact();
+
+    contact.fname = req.body.fname;
+    contact.lname = req.body.lname;
+    contact.subject = req.body.subject;
+    contact.email = req.body.email;
+    contact.message = req.body.message;
+
+    console.log(contact);
+    contact.save((err, doc) => {
+        if (err) {
+            res.send({ 'Success': 'Something is wrong' });
+        } else {
+            res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
+        }
+    });
+});
+router.post('/feedback', (req, res) => {
+    // res.header("allow-file-access-from-files", "*");
+    var feedback = new Feedback();
+
+    feedback.name = req.body.name;
+    feedback.contact = req.body.phone;
+    feedback.email = req.body.email;
+    feedback.message = req.body.message;
+
+
+    console.log(feedback);
+    feedback.save((err, doc) => {
+        if (err) {
+            res.send({ 'Success': 'Something is wrong' });
+        } else {
+            res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
+        }
+    });
+});
+
+
+
+
+module.exports = router;
+
 
 
 
