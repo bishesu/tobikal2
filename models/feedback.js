@@ -6,7 +6,7 @@ feedbackSchema = new Schema({
     fullname: String,
     email: String,
     contact: String,
-    s: String
+    description: String
 });
 Feedback = mongoose.model('Feedback', feedbackSchema);
 

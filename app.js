@@ -1,5 +1,6 @@
 require('./database/connect');
 const User = require('./models/user');
+const Feedback = require('./models/feedback');
 const multer = require('multer');
 const express = require('express');
 const bodyParser = require('body-parser');
@@ -10,12 +11,25 @@ const path = require('path');
 const auth = require('./middleware/auth');
 app.use(express.static('./images'))
 const ImgPost = require('./models/imgpost');
-const mongoose = require('mongoose');
-const comment = mongoose.model("comment");
+// const mongoose = require('mongoose');
+// const comment = mongoose.model("comment");
 
 app.use(cors());
+app.use(express.static("./images"));
+
 
 app.use(bodyParser.urlencoded({ extended: false }));
+app.post("/feedback", (req, res) => {
+    console.log(req.body)
+    var myData = new Feedback(req.body);
+    myData.save().then(function() {
+        res.send(' Contact successfully');
+
+    }).catch(function(e) {
+        res.send(e)
+    });
+});
+//register
 app.post("/register", (req, res) => {
     console.log(req.body)
     var myData = new User(req.body);
@@ -53,8 +67,8 @@ app.get("/profile/:userId", function(req, res) {
 app.put("/updateprofile/:userId", function(req, res) {
     console.log(req.body)
     const userId = req.params.userId;
-    const { username, firstname, lastname, contact, description } = req.body;
-    User.findOneAndUpdate({ _id: userId }, { username, firstname, lastname, contact, description }, { new: true }).then(function(updateduser) {
+    const { username, firstname, lastname, contact, description, profilepicture } = req.body;
+    User.findOneAndUpdate({ _id: userId }, { username, firstname, lastname, contact, description, profilepicture }, { new: true }).then(function(updateduser) {
         res.send("user updated successfully");
     }).catch(function(e) {
         res.send(e)
@@ -131,74 +145,87 @@ app.delete('/createpost/:userpostdelete', async(req, res) => {
 })
 
 // create a comment
-app.post(".imgpost/:id/comment", async(req, res) => { //imgpost/:id/comment pls chck
-    //find a post    
-    const imgpost = await imgpost.findone({ _id: req.params.id });
-    //create a comment
-    const comment = new comment();
-    comment.content = req.body.content;
-    comment.imgpost = imgpost._id;
-    await comment.save();
-    //associate post with comment
-    imgpost.comment.push(comment._id);
-    await imgpost.save();
-    res.send(comment);
-});
+// app.post(".imgpost/:id/comment", async(req, res) => { //imgpost/:id/comment pls chck
+//     //find a post    
+//     const imgpost = await imgpost.findone({ _id: req.params.id });
+//     //create a comment
+//     const comment = new comment();
+//     comment.content = req.body.content;
+//     comment.imgpost = imgpost._id;
+//     await comment.save();
+//     //associate post with comment
+//     imgpost.comment.push(comment._id);
+//     await imgpost.save();
+//     res.send(comment);
+// });
 
 //read a comment
 
 
 
 //feedback
-var express = require('express');
-var router = express.Router();
-var Contact = require('../Model/contact');
-var Feedback = require('../Model/feedback');
+// var express = require('express');
+
+// var router = express.Router();
+// var Contact = require('../Model/contact');
+// var Feedback = require('../Model/feedback');
 
 
-router.post('/contact', (req, res) => {
-    // res.header("allow-file-access-from-files", "*");
-    var contact = new Contact();
+// router.post('/contact', (req, res) => {
+//     // res.header("allow-file-access-from-files", "*");
+//     var contact = new Contact();
 
-    contact.fname = req.body.fname;
-    contact.lname = req.body.lname;
-    contact.subject = req.body.subject;
-    contact.email = req.body.email;
-    contact.message = req.body.message;
+//     contact.fname = req.body.fname;
+//     contact.lname = req.body.lname;
+//     contact.subject = req.body.subject;
+//     contact.email = req.body.email;
+//     contact.message = req.body.message;
 
-    console.log(contact);
-    contact.save((err, doc) => {
-        if (err) {
-            res.send({ 'Success': 'Something is wrong' });
-        } else {
-            res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
-        }
-    });
-});
-router.post('/feedback', (req, res) => {
-    // res.header("allow-file-access-from-files", "*");
-    var feedback = new Feedback();
+//     console.log(contact);
+//     contact.save((err, doc) => {
+//         if (err) {
+//             res.send({ 'Success': 'Something is wrong' });
+//         } else {
+//             res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
+//         }
+//     });
+// });
+// app.post("/contact", (req, res) => {
+//     console.log(req.body)
+//     var myData = new Contact(req.body);
+//     myData.save().then(function() {
+//         res.send(' Contact successfully');
 
-    feedback.name = req.body.name;
-    feedback.contact = req.body.phone;
-    feedback.email = req.body.email;
-    feedback.message = req.body.message;
-
-
-    console.log(feedback);
-    feedback.save((err, doc) => {
-        if (err) {
-            res.send({ 'Success': 'Something is wrong' });
-        } else {
-            res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
-        }
-    });
-});
+//     }).catch(function(e) {
+//         res.send(e)
+//     });
+// });
 
 
+// app.post('/feedback', (req, res) => {
+//     // res.header("allow-file-access-from-files", "*");
+//     var feedback = new Contact();
+
+//     feedback.fullname = req.body.fullname;
+//     feedback.contact = req.body.phone;
+//     feedback.email = req.body.email;
+//     feedback.description = req.body.description;
 
 
-module.exports = router;
+//     console.log(feedback);
+//     feedback.save((err, doc) => {
+//         if (err) {
+//             res.send({ 'Success': 'Something is wrong' });
+//         } else {
+//             res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
+//         }
+//     });
+// });
+
+
+
+
+// module.exports = router;
 
 
 
