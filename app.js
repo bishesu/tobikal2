@@ -17,6 +17,7 @@ const ImgPost = require('./models/imgpost');
 app.use(cors());
 app.use(express.static("./images"));
 
+app.use("/images", express.static('images'))
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.post("/feedback", (req, res) => {
@@ -119,6 +120,7 @@ app.post('/upload', upload.single('upload'), (req, res) => {
 //post
 app.post('/createpost', (req, res) => {
     var postData = new ImgPost(req.body);
+    console.log(req.body)
     postData.save().then(function() {
         res.send('uploaded successfully');
     }).catch(function(e) {
@@ -143,6 +145,43 @@ app.delete('/createpost/:userpostdelete', async(req, res) => {
         res.send(500)
     }
 })
+
+app.get('/get_individual_user_image/:userid', function(req, res) {
+
+    userid = req.params.userid;
+    ImgPost.find({ userid: userid }).then(function(userData) {
+        res.send(userData)
+    }).catch(function() {
+        console.log('error')
+    })
+})
+
+// for home page image
+app.get('/get_all_user_image', function(req, res) {
+
+    ImgPost.find({}).then(function(userData) {
+        console.log(userData)
+        res.send(userData)
+
+    }).catch(function() {
+        console.log('error')
+    })
+})
+
+
+app.get('/get_individual_image/:id', function(req, res) {
+    var imageid = req.params.id;
+    ImgPost.findById(imageid).then(function(userData) {
+        console.log(userData)
+        res.send(userData)
+
+    }).catch(function() {
+        console.log('error')
+    })
+})
+
+
+
 
 // create a comment
 // app.post(".imgpost/:id/comment", async(req, res) => { //imgpost/:id/comment pls chck
