@@ -180,7 +180,29 @@ app.get('/get_individual_image/:id', function(req, res) {
     })
 })
 
+app.get('/get_all_users', function(req, res) {
+    User.find().then(function(Userdata) {
+        res.send(Userdata)
+    }).catch(function() {
 
+    })
+})
+
+app.get('/get_all_feedback', function(req, res) {
+    Feedback.find().then(function(feedback) {
+        res.send(feedback)
+    }).catch(function() {
+
+    })
+})
+app.delete('/delete_user/:id', function(req, res) {
+    var userid = req.params.id
+    User.findOneAndDelete(userid).then(function() {
+        console.log('deleted')
+    }).catch(function() {
+        console.log('failed')
+    })
+})
 
 
 // create a comment
@@ -241,25 +263,25 @@ app.get('/get_individual_image/:id', function(req, res) {
 // });
 
 
-// app.post('/feedback', (req, res) => {
-//     // res.header("allow-file-access-from-files", "*");
-//     var feedback = new Contact();
+app.post('/feedback', (req, res) => {
+    // res.header("allow-file-access-from-files", "*");
+    var feedback = new Feedback();
 
-//     feedback.fullname = req.body.fullname;
-//     feedback.contact = req.body.phone;
-//     feedback.email = req.body.email;
-//     feedback.description = req.body.description;
+    feedback.fullname = req.body.fullname;
+    feedback.contact = req.body.phone;
+    feedback.email = req.body.email;
+    feedback.description = req.body.description;
 
 
-//     console.log(feedback);
-//     feedback.save((err, doc) => {
-//         if (err) {
-//             res.send({ 'Success': 'Something is wrong' });
-//         } else {
-//             res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
-//         }
-//     });
-// });
+    console.log(feedback);
+    feedback.save((err, doc) => {
+        if (err) {
+            res.send({ 'Success': 'Something is wrong' });
+        } else {
+            res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
+        }
+    });
+});
 
 
 
