@@ -3,7 +3,7 @@ const jwt = require('jsonwebtoken');
 
 const auth = async(req, response, next) => {
     try {
-        const token = req.header('Authorization').replace('Bearer', '')
+        const token = req.header('Authorization').replace('Bearer ', '')
         const decoded = jwt.verify(token, 'thisisloginuser')
         const user = await User.findOne({
             _id: decoded._id,

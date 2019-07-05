@@ -1,15 +1,21 @@
 const mongoose = require("mongoose");
+const Schema = mongoose.Schema;
 
-const comment_schema = new mongoose.Schema({
+const comment_schema = new Schema({
     content: {
         type: String,
         require: "content is required"
     },
-    imgpost: {
-        type: mongoose.Schema.Types.ObjectId,
+    imgpostid: {
+        type: mongoose.Schema.ObjectId,
         ref: "imgpost", //same name from image post     
         required: "Post is required field"
+    },
+    user: {
+        type: String
     }
 });
 
-module.exports = mongoose.model
+Comment = mongoose.model('Comment', comment_schema);
+
+module.exports = Comment;

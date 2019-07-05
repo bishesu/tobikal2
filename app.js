@@ -1,18 +1,19 @@
 require('./database/connect');
 const User = require('./models/user');
 const Feedback = require('./models/feedback');
+const Comment = require('./models/comment');
 const multer = require('multer');
 const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const app = express();
+const async = require('async');
 const jwt = require('jsonwebtoken');
 const path = require('path');
 const auth = require('./middleware/auth');
 app.use(express.static('./images'))
 const ImgPost = require('./models/imgpost');
 // const mongoose = require('mongoose');
-// const comment = mongoose.model("comment");
 
 app.use(cors());
 app.use(express.static("./images"));
@@ -45,27 +46,31 @@ app.post("/register", (req, res) => {
 // for login
 
 app.post("/login", async function(req, res) {
+    console.log("i am hehe")
     const user = await User.checkCrediantialsDb(req.body.username, req.body.password);
 
+    console.log(user);
     const token = await user.generateAuthToken();
     console.log(token)
-        // console.log(user);
+    console.log(user);
     res.send({
         token: token,
+        username: user.username,
         usertype: user.usertype,
         id: user._id
     })
 })
 
 //for profile
-app.get("/profile/:userId", function(req, res) {
-    User.findById(req.params.userId).then(function(loggedInUser) {
-        res.json(loggedInUser);
-    })
+app.get("/profile", auth, function(req, res) {
+    // User.findById(req.params.userId).then(function(loggedInUser) {
+    //     res.json(loggedInUser);
+    // })
+    res.json(req.user);
 })
 
 //for updating user profile
-app.put("/updateprofile/:userId", function(req, res) {
+app.put("/updateprofile/:userId", auth, function(req, res) {
     console.log(req.body)
     const userId = req.params.userId;
     const { username, firstname, lastname, contact, description, profilepicture } = req.body;
@@ -77,11 +82,9 @@ app.put("/updateprofile/:userId", function(req, res) {
 })
 
 // LOGOUT
-app.post("/profile/logout", auth, async(req, res) => {
+app.post('/users/logoutAll', auth, async(req, res) => {
     try {
-        req.user.tokens = req.user.tokens.filter((token) => {
-            return token.token !== req.token
-        })
+        req.user.tokens = []
         await req.user.save()
         res.send()
     } catch (e) {
@@ -107,7 +110,7 @@ var upload = multer({
     storage: storage,
     fileFilter: imageFileFilter,
     limits: {
-        fileSize: 1000000
+        fileSize: 10000000000
     }
 });
 
@@ -147,10 +150,12 @@ app.delete('/createpost/:userpostdelete', async(req, res) => {
 })
 
 app.get('/get_individual_user_image/:userid', function(req, res) {
-
+    // console.log("bises");
+    // console.log(req.params.userid);
     userid = req.params.userid;
     ImgPost.find({ userid: userid }).then(function(userData) {
-        res.send(userData)
+        res.send(userData);
+        console.log(userData)
     }).catch(function() {
         console.log('error')
     })
@@ -168,26 +173,26 @@ app.get('/get_all_user_image', function(req, res) {
     })
 })
 
-
+//image id for posting
 app.get('/get_individual_image/:id', function(req, res) {
-    var imageid = req.params.id;
-    ImgPost.findById(imageid).then(function(userData) {
-        console.log(userData)
-        res.send(userData)
+        var imageid = req.params.id;
+        ImgPost.findById(imageid).then(function(userData) {
+            console.log(userData)
+            res.send(userData)
 
-    }).catch(function() {
-        console.log('error')
+        }).catch(function() {
+            console.log('error')
+        })
     })
-})
-
+    //admin view users
 app.get('/get_all_users', function(req, res) {
-    User.find().then(function(Userdata) {
-        res.send(Userdata)
-    }).catch(function() {
+        User.find().then(function(Userdata) {
+            res.send(Userdata)
+        }).catch(function() {
 
+        })
     })
-})
-
+    //admi feedback
 app.get('/get_all_feedback', function(req, res) {
     Feedback.find().then(function(feedback) {
         res.send(feedback)
@@ -195,30 +200,64 @@ app.get('/get_all_feedback', function(req, res) {
 
     })
 })
+
+
+
+//admin delete
 app.delete('/delete_user/:id', function(req, res) {
-    var userid = req.params.id
-    User.findOneAndDelete(userid).then(function() {
-        console.log('deleted')
+        var userid = req.params.id
+        User.findByIdAndDelete(userid).then(function() {
+            console.log('deleted')
+        }).catch(function() {
+            console.log('failed')
+        })
+    })
+    //user feedback delete by admin
+app.post('/deletefeedback', function(req, res) {
+    Feedback.findByIdAndRemove(req.body._id).then(feedback => {
+        console.log(feedback);
+        res.json(feedback);
     }).catch(function() {
         console.log('failed')
     })
 })
 
 
-// create a comment
-// app.post(".imgpost/:id/comment", async(req, res) => { //imgpost/:id/comment pls chck
-//     //find a post    
-//     const imgpost = await imgpost.findone({ _id: req.params.id });
-//     //create a comment
-//     const comment = new comment();
-//     comment.content = req.body.content;
-//     comment.imgpost = imgpost._id;
-//     await comment.save();
-//     //associate post with comment
-//     imgpost.comment.push(comment._id);
-//     await imgpost.save();
-//     res.send(comment);
-// });
+
+//comment
+app.get('/imgpostdetail/:id', (req, res) => {
+    var locals = {};
+    async.parallel([
+        //Load user Data
+        function(callback) {
+            ImgPost.findById(req.params.id, function(err, imgpost) {
+                if (err) return callback(err);
+                locals.imgpost = imgpost;
+                callback();
+            });
+        },
+        //Load posts Data
+        function(callback) {
+            Comment.find({ imgpostid: req.params.id }, function(err, comments) {
+                if (err) return callback(err);
+                locals.comments = comments;
+                console.log(comments);
+                callback();
+            }).sort({ '_id': -1 });
+        }
+    ], function(err) {
+        if (err) return next(err);
+
+        res.json({
+            imgpost: locals.imgpost,
+            comments: locals.comments,
+        });
+    });
+    console.log(locals.comments);
+
+});
+
+
 
 //read a comment
 
@@ -283,12 +322,56 @@ app.post('/feedback', (req, res) => {
     });
 });
 
+app.post('/feedback', (req, res) => {
+    // res.header("allow-file-access-from-files", "*");
+    var feedback = new Feedback();
 
+    feedback.fullname = req.body.fullname;
+    feedback.contact = req.body.phone;
+    feedback.email = req.body.email;
+    feedback.description = req.body.description;
+
+
+    console.log(feedback);
+    feedback.save((err, doc) => {
+        if (err) {
+            res.send({ 'Success': 'Something is wrong' });
+        } else {
+            res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
+        }
+    });
+});
+
+app.post('/comment', (req, res) => {
+
+    var comment = new Comment();
+
+    comment.user = req.body.user;
+    comment.content = req.body.content;
+    comment.imgpostid = req.body.imgpostid;
+    console.log(comment);
+    comment.save((err, doc) => {
+        if (err) {
+            res.send({ 'Success': 'Something is wrong' });
+        } else {
+            res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
+        }
+    });
+});
 
 
 // module.exports = router;
 
+//admin data nadhekhauna
 
+app.get('/get_all_users', function(req, res) {
+    User.find({ usertype: "user" }).then(function(user) {
+            res.send(user);
+        })
+        .catch(function(e) {
+            res.send(e)
+        });
+})
 
 
 app.listen(3000);
