@@ -1,6 +1,7 @@
 require('./database/connect');
 const User = require('./models/user');
 const Feedback = require('./models/feedback');
+const imgpost = require('./models/imgpost');
 const Comment = require('./models/comment');
 const multer = require('multer');
 const express = require('express');
@@ -33,13 +34,13 @@ app.post("/feedback", (req, res) => {
 });
 //register
 app.post("/register", (req, res) => {
+    console.log("i am at register")
     console.log(req.body)
     var myData = new User(req.body);
     myData.save().then(function() {
-        res.send('User registered successfully');
-
+        res.json('User registered successfully');
     }).catch(function(e) {
-        res.send(e)
+        res.json(e)
     });
 });
 
@@ -70,16 +71,26 @@ app.get("/profile", auth, function(req, res) {
 })
 
 //for updating user profile
-app.put("/updateprofile/:userId", auth, function(req, res) {
-    console.log(req.body)
-    const userId = req.params.userId;
+app.put("/updateprofile", auth, function(req, res) {
+
     const { username, firstname, lastname, contact, description, profilepicture } = req.body;
-    User.findOneAndUpdate({ _id: userId }, { username, firstname, lastname, contact, description, profilepicture }, { new: true }).then(function(updateduser) {
+    User.findOneAndUpdate({ _id: req.user._id }, { username, firstname, lastname, contact, description, profilepicture }, { new: true }).then(function(updateduser) {
         res.send("user updated successfully");
     }).catch(function(e) {
         res.send(e)
     })
 })
+
+//upadting image description
+app.put("/updateimagedesc/:id", auth, function(req, res) {
+    var imageId = req.params.id;
+    ImgPost.findByIdAndUpdate({ _id: imageId }, { $set: { description: req.body.description } }).then(function(updatedimage) {
+        res.send("image updated successfully");
+    }).catch(function(e) {
+        res.send(e)
+    })
+})
+
 
 // LOGOUT
 app.post('/users/logoutAll', auth, async(req, res) => {
@@ -149,10 +160,8 @@ app.delete('/createpost/:userpostdelete', async(req, res) => {
     }
 })
 
-app.get('/get_individual_user_image/:userid', function(req, res) {
-    // console.log("bises");
-    // console.log(req.params.userid);
-    userid = req.params.userid;
+app.get('/get_individual_user_image', auth, function(req, res) {
+    userid = req.user._id
     ImgPost.find({ userid: userid }).then(function(userData) {
         res.send(userData);
         console.log(userData)
@@ -161,24 +170,46 @@ app.get('/get_individual_user_image/:userid', function(req, res) {
     })
 })
 
-// for home page image
+
+//for single image
+app.get('/get_individual_image/:id', auth, function(req, res) {
+
+        id = req.params.id
+        ImgPost.find({ _id: id }).then(function(userData) {
+            res.send(userData);
+            // console.log(userData)
+        }).catch(function() {
+            console.log('error')
+        })
+    })
+    // for home page image
 app.get('/get_all_user_image', function(req, res) {
 
-    ImgPost.find({}).then(function(userData) {
-        console.log(userData)
-        res.send(userData)
-
-    }).catch(function() {
-        console.log('error')
-    })
-})
-
-//image id for posting
-app.get('/get_individual_image/:id', function(req, res) {
-        var imageid = req.params.id;
-        ImgPost.findById(imageid).then(function(userData) {
+        ImgPost.find({}).then(function(userData) {
             console.log(userData)
             res.send(userData)
+
+        }).catch(function() {
+            console.log('error')
+        })
+    })
+    //for deleting image
+app.delete('/delete_individual_image/:id', auth, function(req, res) {
+        var id = req.params.id
+        ImgPost.findByIdAndDelete(id).then(function() {
+            console.log('deleted')
+        }).catch(function() {
+            console.log('failed')
+        })
+    })
+    //image id for posting
+app.get('/get_individual_image/:id', function(req, res) {
+        var imageid = req.params.id;
+        console.log('i am here')
+        console.log(imageid)
+        ImgPost.findById(imageid).then(function(userData) {
+            console.log(userData)
+            res.json(userData)
 
         }).catch(function() {
             console.log('error')
@@ -187,7 +218,7 @@ app.get('/get_individual_image/:id', function(req, res) {
     //admin view users
 app.get('/get_all_users', function(req, res) {
         User.find().then(function(Userdata) {
-            res.send(Userdata)
+            res.json(Userdata)
         }).catch(function() {
 
         })
@@ -201,6 +232,14 @@ app.get('/get_all_feedback', function(req, res) {
     })
 })
 
+//admin view all user post
+app.get('/get_all_image', function(req, res) {
+    imgpost.find().then(function(imagedata) {
+        res.send(imagedata)
+    }).catch(function() {
+
+    })
+})
 
 
 //admin delete
@@ -213,10 +252,21 @@ app.delete('/delete_user/:id', function(req, res) {
         })
     })
     //user feedback delete by admin
-app.post('/deletefeedback', function(req, res) {
-    Feedback.findByIdAndRemove(req.body._id).then(feedback => {
-        console.log(feedback);
-        res.json(feedback);
+app.delete('/deletefeedback/:id', function(req, res) {
+        console.log(req.params.id)
+        Feedback.findByIdAndDelete(req.params.id).then(feedback => {
+            console.log(feedback);
+            res.json(feedback);
+        }).catch(function() {
+            console.log('failed')
+        })
+    })
+    //user post delete by admin
+app.delete('/deletepost/:id', function(req, res) {
+    console.log(req.params.id)
+    ImgPost.findByIdAndDelete(req.params.id).then(imgpost => {
+        console.log(imgpost);
+        res.json(imgpost);
     }).catch(function() {
         console.log('failed')
     })
@@ -259,48 +309,25 @@ app.get('/imgpostdetail/:id', (req, res) => {
 
 
 
-//read a comment
-
-
-
-//feedback
-// var express = require('express');
-
-// var router = express.Router();
-// var Contact = require('../Model/contact');
-// var Feedback = require('../Model/feedback');
-
-
-// router.post('/contact', (req, res) => {
+// app.post('/feedback', (req, res) => {
 //     // res.header("allow-file-access-from-files", "*");
-//     var contact = new Contact();
+//     var feedback = new Feedback();
 
-//     contact.fname = req.body.fname;
-//     contact.lname = req.body.lname;
-//     contact.subject = req.body.subject;
-//     contact.email = req.body.email;
-//     contact.message = req.body.message;
+//     feedback.fullname = req.body.fullname;
+//     feedback.contact = req.body.phone;
+//     feedback.email = req.body.email;
+//     feedback.description = req.body.description;
 
-//     console.log(contact);
-//     contact.save((err, doc) => {
+
+//     console.log(feedback);
+//     feedback.save((err, doc) => {
 //         if (err) {
-//             res.send({ 'Success': 'Something is wrong' });
+//             res.json('Something is wrong');
 //         } else {
-//             res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
+//             res.json({ "Success": 'Your feedback successfully send. We will call you soon' });
 //         }
 //     });
 // });
-// app.post("/contact", (req, res) => {
-//     console.log(req.body)
-//     var myData = new Contact(req.body);
-//     myData.save().then(function() {
-//         res.send(' Contact successfully');
-
-//     }).catch(function(e) {
-//         res.send(e)
-//     });
-// });
-
 
 app.post('/feedback', (req, res) => {
     // res.header("allow-file-access-from-files", "*");
@@ -315,27 +342,7 @@ app.post('/feedback', (req, res) => {
     console.log(feedback);
     feedback.save((err, doc) => {
         if (err) {
-            res.send({ 'Success': 'Something is wrong' });
-        } else {
-            res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
-        }
-    });
-});
-
-app.post('/feedback', (req, res) => {
-    // res.header("allow-file-access-from-files", "*");
-    var feedback = new Feedback();
-
-    feedback.fullname = req.body.fullname;
-    feedback.contact = req.body.phone;
-    feedback.email = req.body.email;
-    feedback.description = req.body.description;
-
-
-    console.log(feedback);
-    feedback.save((err, doc) => {
-        if (err) {
-            res.send({ 'Success': 'Something is wrong' });
+            res.json('Something is wrong');
         } else {
             res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
         }
@@ -372,6 +379,8 @@ app.get('/get_all_users', function(req, res) {
             res.send(e)
         });
 })
+
+// post count 
 
 
 app.listen(3000);

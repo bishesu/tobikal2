@@ -4,6 +4,7 @@ var userSchema = new mongoose.Schema({
     imagename: String,
     description: String,
     userid: String,
+
     // comments: [{
     //     type: mongoose.Schema.Types.ObjectId,
     //     ref: "comment",
