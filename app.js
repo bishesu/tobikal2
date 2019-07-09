@@ -26,10 +26,10 @@ app.post("/feedback", (req, res) => {
     console.log(req.body)
     var myData = new Feedback(req.body);
     myData.save().then(function() {
-        res.send(' Contact successfully');
+        res.json(' Contact successfully');
 
     }).catch(function(e) {
-        res.send(e)
+        res.json(e)
     });
 });
 //register
@@ -54,7 +54,7 @@ app.post("/login", async function(req, res) {
     const token = await user.generateAuthToken();
     console.log(token)
     console.log(user);
-    res.send({
+    res.json({
         token: token,
         username: user.username,
         usertype: user.usertype,
@@ -75,19 +75,20 @@ app.put("/updateprofile", auth, function(req, res) {
 
     const { username, firstname, lastname, contact, description, profilepicture } = req.body;
     User.findOneAndUpdate({ _id: req.user._id }, { username, firstname, lastname, contact, description, profilepicture }, { new: true }).then(function(updateduser) {
-        res.send("user updated successfully");
+        res.json("user updated successfully");
     }).catch(function(e) {
-        res.send(e)
+        res.json(e)
     })
 })
+
 
 //upadting image description
 app.put("/updateimagedesc/:id", auth, function(req, res) {
     var imageId = req.params.id;
     ImgPost.findByIdAndUpdate({ _id: imageId }, { $set: { description: req.body.description } }).then(function(updatedimage) {
-        res.send("image updated successfully");
+        res.json("image updated successfully");
     }).catch(function(e) {
-        res.send(e)
+        res.json(e)
     })
 })
 
@@ -97,7 +98,7 @@ app.post('/users/logoutAll', auth, async(req, res) => {
     try {
         req.user.tokens = []
         await req.user.save()
-        res.send()
+        res.json()
     } catch (e) {
         res.status(500).send()
     }
@@ -127,7 +128,7 @@ var upload = multer({
 
 //image gate
 app.post('/upload', upload.single('upload'), (req, res) => {
-    res.send({ Filename: req.file.filename });
+    res.json({ Filename: req.file.filename });
     console.log(req.file.filename)
 })
 
@@ -145,7 +146,7 @@ app.post('/createpost', (req, res) => {
 //current user
 app.get('/user/auth', auth, function(req, res) {
     console.log(req.user);
-    res.send(req.user);
+    res.json(req.user);
 })
 
 //deleting user post
@@ -154,16 +155,25 @@ app.delete('/createpost/:userpostdelete', async(req, res) => {
         const post = await post.findByIdAndRemove({
             _id: req.params.userpostdelete
         });
-        res.send(post)
+        res.json(post)
     } catch (error) {
-        res.send(500)
+        res.json(500)
     }
 })
 
 app.get('/get_individual_user_image', auth, function(req, res) {
     userid = req.user._id
     ImgPost.find({ userid: userid }).then(function(userData) {
-        res.send(userData);
+        res.json(userData);
+        console.log(userData)
+    }).catch(function() {
+        console.log('error')
+    })
+})
+app.get('/get_individual_user_image_android/:id', function(req, res) {
+    // userid = req.user.id
+    ImgPost.find({ id: req.param.userid }).then(function(userData) {
+        res.json(userData);
         console.log(userData)
     }).catch(function() {
         console.log('error')
@@ -176,7 +186,7 @@ app.get('/get_individual_image/:id', auth, function(req, res) {
 
         id = req.params.id
         ImgPost.find({ _id: id }).then(function(userData) {
-            res.send(userData);
+            res.json(userData);
             // console.log(userData)
         }).catch(function() {
             console.log('error')
@@ -187,7 +197,7 @@ app.get('/get_all_user_image', function(req, res) {
 
         ImgPost.find({}).then(function(userData) {
             console.log(userData)
-            res.send(userData)
+            res.json(userData)
 
         }).catch(function() {
             console.log('error')
@@ -226,7 +236,7 @@ app.get('/get_all_users', function(req, res) {
     //admi feedback
 app.get('/get_all_feedback', function(req, res) {
     Feedback.find().then(function(feedback) {
-        res.send(feedback)
+        res.json(feedback)
     }).catch(function() {
 
     })
@@ -235,7 +245,7 @@ app.get('/get_all_feedback', function(req, res) {
 //admin view all user post
 app.get('/get_all_image', function(req, res) {
     imgpost.find().then(function(imagedata) {
-        res.send(imagedata)
+        res.json(imagedata)
     }).catch(function() {
 
     })
@@ -344,7 +354,7 @@ app.post('/feedback', (req, res) => {
         if (err) {
             res.json('Something is wrong');
         } else {
-            res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
+            res.json({ "Success": 'Your feedback successfully send. We will call you soon' });
         }
     });
 });
@@ -359,9 +369,9 @@ app.post('/comment', (req, res) => {
     console.log(comment);
     comment.save((err, doc) => {
         if (err) {
-            res.send({ 'Success': 'Something is wrong' });
+            res.json({ 'Success': 'Something is wrong' });
         } else {
-            res.send({ "Success": 'Your feedback successfully send. We will call you soon' });
+            res.json({ "Success": 'Your feedback successfully send. We will call you soon' });
         }
     });
 });
@@ -373,10 +383,10 @@ app.post('/comment', (req, res) => {
 
 app.get('/get_all_users', function(req, res) {
     User.find({ usertype: "user" }).then(function(user) {
-            res.send(user);
+            res.json(user);
         })
         .catch(function(e) {
-            res.send(e)
+            res.json(e)
         });
 })
 

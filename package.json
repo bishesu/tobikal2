@@ -1,0 +1,26 @@
+{
+    "name": "photogenie",
+    "version": "1.0.0",
+    "description": "Name: Your Full Name",
+    "main": "app.js",
+    "directories": {
+        "test": "tests"
+    },
+    "devDependencies": {},
+    "scripts": {
+        "test": "jest"
+    },
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/stw304cem/t2-backend-api-bishesu.git"
+    },
+    "author": "",
+    "license": "ISC",
+    "bugs": {
+        "url": "https://github.com/stw304cem/t2-backend-api-bishesu/issues"
+    },
+    "homepage": "https://github.com/stw304cem/t2-backend-api-bishesu#readme",
+    "dependencies": {
+        "jest": "^24.8.0"
+    }
+}
